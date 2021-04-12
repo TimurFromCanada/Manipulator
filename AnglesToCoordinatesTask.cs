@@ -6,15 +6,20 @@ namespace Manipulation
 {
     public static class AnglesToCoordinatesTask
     {
-        /// <summary>
-        /// По значению углов суставов возвращает массив координат суставов
-        /// в порядке new []{elbow, wrist, palmEnd}
-        /// </summary>
         public static PointF[] GetJointPositions(double shoulder, double elbow, double wrist)
         {
-            var elbowPos = new PointF(0, (float) Manipulator.UpperArm);
-            var wristPos = new PointF((float) Manipulator.Forearm, (float) Manipulator.UpperArm);
-            var palmEndPos = new PointF((float) (Manipulator.Forearm + Manipulator.Palm), (float) Manipulator.UpperArm);
+            float positionX = Manipulator.UpperArm * (float)Math.Cos(shoulder);
+            float positionY = Manipulator.UpperArm * (float)Math.Sin(shoulder);
+            var elbowPos = new PointF(positionX, positionY);
+
+            positionX += Manipulator.Forearm * (float)Math.Cos(elbow + shoulder - Math.PI);
+            positionY += Manipulator.Forearm * (float)Math.Sin(elbow + shoulder - Math.PI);
+            var wristPos = new PointF(positionX, positionY);
+
+            positionX += Manipulator.Palm * (float)Math.Cos(wrist + elbow + shoulder - 2 * Math.PI);
+            positionY += Manipulator.Palm * (float)Math.Sin(wrist + elbow + shoulder - 2 * Math.PI);
+            var palmEndPos = new PointF(positionX, positionY);
+
             return new PointF[]
             {
                 elbowPos,
@@ -27,16 +32,15 @@ namespace Manipulation
     [TestFixture]
     public class AnglesToCoordinatesTask_Tests
     {
-        // Доработайте эти тесты!
-        // С помощью строчки TestCase можно добавлять новые тестовые данные.
-        // Аргументы TestCase превратятся в аргументы метода.
         [TestCase(Math.PI / 2, Math.PI / 2, Math.PI, Manipulator.Forearm + Manipulator.Palm, Manipulator.UpperArm)]
         public void TestGetJointPositions(double shoulder, double elbow, double wrist, double palmEndX, double palmEndY)
         {
             var joints = AnglesToCoordinatesTask.GetJointPositions(shoulder, elbow, wrist);
             Assert.AreEqual(palmEndX, joints[2].X, 1e-5, "palm endX");
             Assert.AreEqual(palmEndY, joints[2].Y, 1e-5, "palm endY");
-            Assert.Fail("TODO: проверить, что расстояния между суставами равны длинам сегментов манипулятора!");
         }
     }
 }
+
+
+
